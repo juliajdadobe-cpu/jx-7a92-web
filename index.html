@@ -31,7 +31,7 @@
 
     .search-wrapper {
       position: relative;
-      margin-bottom: 16px;
+      margin-bottom: 12px;
     }
 
     .search {
@@ -57,6 +57,27 @@
 
     .search-wrapper button:hover {
       color: #374151;
+    }
+
+    /* ===== TOP ACTIONS ===== */
+
+    .top-actions {
+      display: flex;
+      gap: 10px;
+      margin-bottom: 16px;
+    }
+
+    .top-actions button {
+      padding: 8px 14px;
+      border-radius: 8px;
+      border: 1px solid #d1d5db;
+      background: #ffffff;
+      cursor: pointer;
+      font-size: 0.95rem;
+    }
+
+    .top-actions button:hover {
+      background: #eef2f7;
     }
 
     /* ===== CHAPTERS ===== */
@@ -101,6 +122,33 @@
       color: #374151;
     }
 
+    /* ===== RANDOM MODE ===== */
+
+    .random-mode {
+      display: none;
+      background: #ffffff;
+      border-radius: 12px;
+      padding: 20px;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+    }
+
+    .random-question {
+      font-weight: 600;
+      margin-bottom: 12px;
+      cursor: pointer;
+    }
+
+    .random-answer {
+      display: none;
+      color: #374151;
+      margin-bottom: 16px;
+    }
+
+    .random-actions {
+      display: flex;
+      gap: 10px;
+    }
+
     /* ===== STATS ===== */
 
     .stats {
@@ -119,15 +167,7 @@
       display: flex;
       flex-direction: column;
       gap: 10px;
-      opacity: 0;
-      pointer-events: none;
-      transition: opacity 0.25s ease;
       z-index: 1000;
-    }
-
-    .floating-actions.show {
-      opacity: 1;
-      pointer-events: auto;
     }
 
     .floating-actions button {
@@ -154,24 +194,30 @@
 <body>
   <div class="container">
     <h1>Java</h1>
-    
+
+    <div class="top-actions">
+      <button id="randomModeBtn">🎲 Случайный вопрос</button>
+    </div>
+
     <div class="search-wrapper">
       <input id="searchInput" class="search" type="text" placeholder="Поиск" />
       <button id="clearSearch">✕</button>
     </div>
 
     <div id="content"></div>
+
+    <div id="randomMode" class="random-mode"></div>
+
     <div id="stats" class="stats"></div>
   </div>
 
-  <div class="floating-actions">
+  <div class="floating-actions show">
     <button id="scrollTopBtn" title="Наверх">⬆️</button>
     <button id="collapseAllBtn" title="Свернуть всё">🧹</button>
   </div>
 
   <script>
-    const BASE_URL =
-      "https://raw.githubusercontent.com/juliajdadobe-cpu/jx-7a92-data/main/";
+    const BASE_URL = "https://raw.githubusercontent.com/juliajdadobe-cpu/jx-7a92-data/main/";
 
     const TOPICS = [
       { title: "Java Core", file: "Java_Core.json" },
@@ -199,19 +245,16 @@
 
     async function loadAllTopics() {
       for (const topic of TOPICS) {
-        try {
-          const res = await fetch(BASE_URL + topic.file, { cache: "no-store" });
-          const json = await res.json();
-          data[topic.title] = Object.values(json)[0];
-        } catch {
-          data[topic.title] = [{ question: "Ошибка загрузки", answer: "" }];
-        }
+        const res = await fetch(BASE_URL + topic.file);
+        const json = await res.json();
+        data[topic.title] = Object.values(json)[0];
       }
       render();
       updateStats();
     }
 
     const content = document.getElementById('content');
+    const randomMode = document.getElementById('randomMode');
 
     function render(filter = '') {
       content.innerHTML = '';
@@ -268,6 +311,47 @@
       document.getElementById('stats').textContent = `Всего вопросов: ${total}`;
     }
 
+    function enterRandomMode() {
+      content.style.display = 'none';
+      randomMode.style.display = 'block';
+      showRandomQuestion();
+    }
+
+    function exitRandomMode() {
+      randomMode.style.display = 'none';
+      content.style.display = 'block';
+    }
+
+    function showRandomQuestion() {
+      const all = Object.values(data).flat();
+      const q = all[Math.floor(Math.random() * all.length)];
+
+      randomMode.innerHTML = `
+        <div class="random-question">${q.question}</div>
+        <div class="random-answer">${q.answer}</div>
+        <div class="random-actions">
+          <button onclick="showRandomQuestion()">🔄 Ещё вопрос</button>
+          <button onclick="exitRandomMode()">⬅️ Назад</button>
+        </div>
+      `;
+
+      randomMode.querySelector('.random-question').onclick = () => {
+        const a = randomMode.querySelector('.random-answer');
+        a.style.display = a.style.display === 'block' ? 'none' : 'block';
+      };
+    }
+
+    document.getElementById('randomModeBtn').onclick = enterRandomMode;
+
+    document.getElementById('scrollTopBtn').onclick =
+      () => window.scrollTo({ top: 0, behavior: 'smooth' });
+
+    document.getElementById('collapseAllBtn').onclick = () => {
+      document.querySelectorAll('.questions').forEach(q => q.style.display = 'none');
+      document.querySelectorAll('.answer').forEach(a => a.style.display = 'none');
+      document.querySelectorAll('.arrow').forEach(a => a.textContent = '▸');
+    };
+
     const searchInput = document.getElementById('searchInput');
     const clearSearch = document.getElementById('clearSearch');
 
@@ -281,20 +365,6 @@
       searchInput.value = '';
       clearSearch.style.display = 'none';
       render('');
-    };
-
-    const floating = document.querySelector('.floating-actions');
-
-    window.onscroll = () =>
-      floating.classList.toggle('show', window.scrollY > 0);
-
-    document.getElementById('scrollTopBtn').onclick =
-      () => window.scrollTo({ top: 0, behavior: 'smooth' });
-
-    document.getElementById('collapseAllBtn').onclick = () => {
-      document.querySelectorAll('.questions').forEach(q => q.style.display = 'none');
-      document.querySelectorAll('.answer').forEach(a => a.style.display = 'none');
-      document.querySelectorAll('.arrow').forEach(a => a.textContent = '▸');
     };
 
     loadAllTopics();
