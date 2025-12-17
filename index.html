@@ -69,6 +69,46 @@
     @media (max-width: 600px) {
       h1 { font-size: 1.4rem; }
     }
+
+    .floating-actions {
+      position: fixed;
+      right: 16px;
+      bottom: 16px;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.25s ease;
+      z-index: 1000;
+    }
+    
+    .floating-actions.show {
+      opacity: 1;
+      pointer-events: auto;
+    }
+    
+    .floating-actions button {
+      width: 44px;
+      height: 44px;
+      border-radius: 50%;
+      border: none;
+      background: #e5e7eb;
+      color: #111827;
+      font-size: 18px;
+      cursor: pointer;
+      box-shadow: 0 6px 16px rgba(0,0,0,0.15);
+      transition: background 0.2s ease, transform 0.1s ease;
+    }
+    
+    .floating-actions button:hover {
+      background: #d1d5db;
+      transform: translateY(-1px);
+    }
+    
+    .floating-actions button:active {
+      transform: translateY(0);
+    }
   </style>
 </head>
 <body>
@@ -201,6 +241,42 @@
       render(e.target.value.toLowerCase());
     });
   </script>
+
+  <script>
+    const scrollTopBtn = document.getElementById('scrollTopBtn');
+    const collapseAllBtn = document.getElementById('collapseAllBtn');
+    const floatingActions = document.querySelector('.floating-actions');
+  
+    // показываем кнопки при прокрутке
+    window.addEventListener('scroll', () => {
+      if (window.scrollY > 300) {
+        floatingActions.classList.add('show');
+      } else {
+        floatingActions.classList.remove('show');
+      }
+    });
+  
+    // прокрутка наверх
+    scrollTopBtn.addEventListener('click', () => {
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    });
+  
+    // свернуть все главы и ответы
+    collapseAllBtn.addEventListener('click', () => {
+      document.querySelectorAll('.questions').forEach(q => {
+        q.style.display = 'none';
+      });
+  
+      document.querySelectorAll('.answer').forEach(a => {
+        a.style.display = 'none';
+      });
+  
+      document.querySelectorAll('.chapter-header .arrow').forEach(arrow => {
+        arrow.textContent = '▸';
+      });
+    });
+  </script>
+
 
 </body>
 </html>
