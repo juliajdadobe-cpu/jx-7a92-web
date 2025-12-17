@@ -59,21 +59,21 @@
       color: #374151;
     }
 
-    /* ===== TOP ACTIONS ===== */
+    /* ===== TOP ACTION ===== */
 
     .top-actions {
-      display: flex;
-      gap: 10px;
-      margin-bottom: 16px;
+      margin-bottom: 12px;
     }
 
     .top-actions button {
-      padding: 8px 14px;
-      border-radius: 8px;
+      width: 100%;
+      padding: 14px;
+      border-radius: 12px;
       border: 1px solid #d1d5db;
       background: #ffffff;
       cursor: pointer;
-      font-size: 0.95rem;
+      font-size: 1.05rem;
+      font-weight: 600;
     }
 
     .top-actions button:hover {
@@ -127,26 +127,49 @@
     .random-mode {
       display: none;
       background: #ffffff;
-      border-radius: 12px;
-      padding: 20px;
+      border-radius: 14px;
+      padding: 22px;
       box-shadow: 0 4px 12px rgba(0,0,0,0.05);
     }
 
+    .random-chapter {
+      display: inline-block;
+      margin-bottom: 14px;
+      padding: 6px 14px;
+      font-size: 0.9rem;
+      border-radius: 999px;
+      background: #eef2f7;
+      color: #374151;
+    }
+
     .random-question {
-      font-weight: 600;
-      margin-bottom: 12px;
+      font-size: 1.15rem;
+      font-weight: 700;
+      margin-bottom: 14px;
       cursor: pointer;
     }
 
     .random-answer {
       display: none;
+      font-size: 1rem;
       color: #374151;
-      margin-bottom: 16px;
+      margin-bottom: 20px;
     }
 
-    .random-actions {
-      display: flex;
-      gap: 10px;
+    .random-actions button {
+      width: 100%;
+      padding: 16px;
+      border-radius: 14px;
+      border: 1px solid #d1d5db;
+      background: #ffffff;
+      cursor: pointer;
+      font-size: 1.05rem;
+      font-weight: 600;
+      margin-bottom: 12px;
+    }
+
+    .random-actions button:hover {
+      background: #eef2f7;
     }
 
     /* ===== STATS ===== */
@@ -170,13 +193,17 @@
       z-index: 1000;
     }
 
+    .floating-actions.hidden {
+      display: none;
+    }
+
     .floating-actions button {
-      width: 44px;
-      height: 44px;
+      width: 48px;
+      height: 48px;
       border-radius: 50%;
       border: none;
       background: #e5e7eb;
-      font-size: 18px;
+      font-size: 20px;
       cursor: pointer;
       box-shadow: 0 6px 16px rgba(0,0,0,0.15);
     }
@@ -199,19 +226,17 @@
       <button id="randomModeBtn">🎲 Случайный вопрос</button>
     </div>
 
-    <div class="search-wrapper">
+    <div id="searchWrapper" class="search-wrapper">
       <input id="searchInput" class="search" type="text" placeholder="Поиск" />
       <button id="clearSearch">✕</button>
     </div>
 
     <div id="content"></div>
-
     <div id="randomMode" class="random-mode"></div>
-
     <div id="stats" class="stats"></div>
   </div>
 
-  <div class="floating-actions show">
+  <div id="floatingActions" class="floating-actions">
     <button id="scrollTopBtn" title="Наверх">⬆️</button>
     <button id="collapseAllBtn" title="Свернуть всё">🧹</button>
   </div>
@@ -243,6 +268,11 @@
 
     let data = {};
 
+    const content = document.getElementById('content');
+    const randomMode = document.getElementById('randomMode');
+    const searchWrapper = document.getElementById('searchWrapper');
+    const floatingActions = document.getElementById('floatingActions');
+
     async function loadAllTopics() {
       for (const topic of TOPICS) {
         const res = await fetch(BASE_URL + topic.file);
@@ -252,9 +282,6 @@
       render();
       updateStats();
     }
-
-    const content = document.getElementById('content');
-    const randomMode = document.getElementById('randomMode');
 
     function render(filter = '') {
       content.innerHTML = '';
@@ -313,6 +340,8 @@
 
     function enterRandomMode() {
       content.style.display = 'none';
+      searchWrapper.style.display = 'none';
+      floatingActions.classList.add('hidden');
       randomMode.style.display = 'block';
       showRandomQuestion();
     }
@@ -320,18 +349,25 @@
     function exitRandomMode() {
       randomMode.style.display = 'none';
       content.style.display = 'block';
+      searchWrapper.style.display = 'block';
+      floatingActions.classList.remove('hidden');
     }
 
     function showRandomQuestion() {
-      const all = Object.values(data).flat();
+      const all = [];
+      Object.entries(data).forEach(([chapter, questions]) =>
+        questions.forEach(q => all.push({ ...q, chapter }))
+      );
+
       const q = all[Math.floor(Math.random() * all.length)];
 
       randomMode.innerHTML = `
+        <div class="random-chapter">${q.chapter}</div>
         <div class="random-question">${q.question}</div>
         <div class="random-answer">${q.answer}</div>
         <div class="random-actions">
           <button onclick="showRandomQuestion()">🔄 Ещё вопрос</button>
-          <button onclick="exitRandomMode()">⬅️ Назад</button>
+          <button onclick="exitRandomMode()">⬅️ Назад к списку</button>
         </div>
       `;
 
