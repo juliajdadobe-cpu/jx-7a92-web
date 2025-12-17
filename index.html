@@ -286,7 +286,7 @@
     const floating = document.querySelector('.floating-actions');
 
     window.onscroll = () =>
-      floating.classList.toggle('show', window.scrollY > 300);
+      floating.classList.toggle('show', window.scrollY > 0);
 
     document.getElementById('scrollTopBtn').onclick =
       () => window.scrollTo({ top: 0, behavior: 'smooth' });
