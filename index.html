@@ -77,37 +77,63 @@
     <input class="search" type="text" placeholder="Поиск по вопросам..." />
     <div id="content"></div>
   </div>
-
+  
   <script>
-  let data = {};
-
-  const DATA_URL =
-    "https://raw.githubusercontent.com/juliajdadobe-cpu/jx-7a92-data/main/q_7a92.json";
-
-  async function loadData() {
-    try {
-      const res = await fetch(DATA_URL, { cache: "no-store" });
-      if (!res.ok) {
-        throw new Error("Failed to load interview data");
+    const BASE_URL =
+      "https://raw.githubusercontent.com/juliajdadobe-cpu/jx-7a92-data/main/";
+  
+    const TOPICS = [
+      { title: "Java Core", file: "Java_Core.json" },
+      { title: "ООП", file: "OOP.json" },
+      { title: "Исключения", file: "Exceptions.json" },
+      { title: "Коллекции", file: "Collections.json" },
+      { title: "Дженерики", file: "Generics.json" },
+      { title: "Stream API", file: "java-stream-api.json" },
+      { title: "Многопоточность", file: "multithreading.json" },
+      { title: "JVM / GC / Memory", file: "jvm_gc_memory.json" },
+      { title: "Java IO / NIO", file: "java_io_nio.json" },
+      { title: "HTTP", file: "http.json" },
+      { title: "SQL / Базы данных", file: "sql_databases.json" },
+      { title: "JDBC / JPA / Hibernate", file: "jdbc_jpa_hibernate.json" },
+      { title: "Spring / Spring Boot", file: "spring_spring_boot.json" },
+      { title: "Spring MVC / Web / Security", file: "spring_mvc_web_security.json" },
+      { title: "Kafka / Messaging", file: "kafka_messaging.json" },
+      { title: "Архитектура / Микросервисы", file: "architecture_microservices.json" },
+      { title: "DevOps / Docker / Kubernetes", file: "devops_docker_kubernetes.json" },
+      { title: "Производительность / Observability", file: "performance_observability.json" }
+    ];
+  
+    let data = {};
+  
+    async function loadAllTopics() {
+      for (const topic of TOPICS) {
+        try {
+          const res = await fetch(BASE_URL + topic.file, { cache: "no-store" });
+          if (!res.ok) throw new Error("Failed to load " + topic.file);
+  
+          const json = await res.json();
+  
+          // файл имеет формат { "Java Core": [ ... ] }
+          const questions = Object.values(json)[0];
+  
+          data[topic.title] = questions;
+        } catch (e) {
+          console.error(e);
+          data[topic.title] = [
+            {
+              question: "Ошибка загрузки",
+              answer: `Не удалось загрузить файл ${topic.file}`
+            }
+          ];
+        }
       }
-      data = await res.json();
-      render();
-    } catch (e) {
-      console.error(e);
-      data = {
-        "Ошибка загрузки данных": [
-          {
-            question: "Не удалось загрузить вопросы",
-            answer: "Проверь ссылку DATA_URL и доступность файла на GitHub."
-          }
-        ]
-      };
+  
       render();
     }
-  }
+  
+    loadAllTopics();
+  </script>
 
-  loadData();
-</script>
 
 
   <script>
