@@ -21,7 +21,6 @@
       overscroll-behavior: contain;
     }
 
-    /* ===== HARD RESET BUTTON STATES ===== */
     button {
       appearance: none;
       -webkit-appearance: none;
@@ -36,104 +35,67 @@
       font-size: 1rem;
     }
 
-    button:hover,
-    button:active,
-    button:focus,
-    button:focus-visible {
-      background: #e5e7eb !important;
-      color: #111827 !important;
-      outline: none !important;
-      box-shadow: none !important;
-    }
-
     .container {
       max-width: 900px;
       margin: 0 auto;
       padding: 16px;
     }
 
-    h1 {
-      font-size: 1.8rem;
-      margin-bottom: 12px;
-    }
+    h1 { font-size: 1.8rem; }
 
-    /* ===== SEARCH ===== */
-    .search-wrapper {
-      position: relative;
-      margin-bottom: 16px;
-    }
+    .search-wrapper { margin-bottom: 16px; }
 
     .search {
       width: 100%;
-      padding: 12px 42px 12px 14px;
+      padding: 12px;
       border-radius: 10px;
       border: 1px solid #d1d5db;
       font-size: 1rem;
     }
 
-    .clear-search {
-      position: absolute;
-      right: 10px;
-      top: 50%;
-      transform: translateY(-50%);
-      font-size: 18px;
-      background: transparent !important;
-      color: #9ca3af !important;
-      display: none;
-    }
-
-    /* ===== CHAPTERS ===== */
     .chapter {
-      background: #ffffff;
+      background: #fff;
       border-radius: 12px;
       margin-bottom: 12px;
       box-shadow: 0 4px 12px rgba(0,0,0,0.05);
-      overflow: hidden;
     }
 
     .chapter-header {
-      padding: 18px 20px;
-      font-size: 1.15rem;
+      padding: 16px;
       font-weight: 600;
       background: #eef2f7;
-      cursor: pointer;
       display: flex;
       justify-content: space-between;
+      cursor: pointer;
     }
 
     .questions { display: none; }
 
-    .question {
-      padding: 12px 16px;
-      border-top: 1px solid #e5e7eb;
-    }
+    .question { padding: 12px 16px; border-top: 1px solid #e5e7eb; }
 
-    .question-title {
-      font-weight: 500;
-      cursor: pointer;
-    }
-
-    .answer {
+    .answer,
+    .random-answer {
+      white-space: pre-line;
       display: none;
-      margin-top: 6px;
-      font-size: 0.95rem;
+      margin-top: 8px;
       color: #374151;
     }
 
     /* ===== RANDOM MODE ===== */
+
     .random-card {
-      background: #ffffff;
+      background: #fff;
       border-radius: 16px;
       padding: 20px;
       box-shadow: 0 10px 30px rgba(0,0,0,0.1);
     }
 
     .random-topic {
-      font-size: 0.85rem;
+      font-size: 0.8rem;
       color: #6b7280;
-      margin-bottom: 8px;
-      font-weight: 600;
+      font-weight: 700;
       text-transform: uppercase;
+      margin-bottom: 6px;
     }
 
     .random-question {
@@ -142,202 +104,149 @@
       margin-bottom: 12px;
     }
 
-    .random-answer {
-      margin-top: 10px;
-      color: #374151;
-      display: none;
-    }
-
     .big-btn {
       width: 100%;
       padding: 14px;
       border-radius: 12px;
-      margin-top: 12px;
+      margin-top: 10px;
       font-size: 1.05rem;
     }
 
-    /* ===== STATS ===== */
-    .stats {
-      margin-top: 20px;
-      text-align: center;
-      color: #6b7280;
+    .topics-filter {
+      margin-top: 16px;
+      padding-top: 12px;
+      border-top: 1px solid #e5e7eb;
+    }
+
+    .topics-filter label {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin-bottom: 8px;
       font-size: 0.95rem;
     }
 
-    /* ===== FLOATING ===== */
-    .floating-actions {
-      position: fixed;
-      right: 16px;
-      bottom: 16px;
-      display: flex;
-      flex-direction: column;
-      gap: 10px;
-      z-index: 1000;
-    }
-
-    .floating-actions button {
-      width: 48px;
-      height: 48px;
-      border-radius: 50%;
-      font-size: 18px;
-    }
-
-    .answer,
-    .random-answer {
-      white-space: pre-line;
+    .topics-filter input {
+      width: 18px;
+      height: 18px;
     }
   </style>
 </head>
 
 <body>
-  <div class="container">
-    <h1>Java</h1>
+<div class="container">
+  <h1>Java</h1>
 
-    <div id="searchBlock" class="search-wrapper">
-      <input id="searchInput" class="search" placeholder="Поиск" />
-      <button id="clearSearch" class="clear-search">✕</button>
-    </div>
-
-    <div id="content"></div>
-    <div id="stats" class="stats"></div>
+  <div id="searchBlock" class="search-wrapper">
+    <input id="searchInput" class="search" placeholder="Поиск" />
   </div>
 
-  <div id="floating" class="floating-actions">
-    <button id="scrollTop">⬆️</button>
-    <button id="collapseAll">🧹</button>
-    <button id="randomMode">🎲</button>
-  </div>
+  <div id="content"></div>
+</div>
 
-  <script>
-    document.addEventListener('gesturestart', e => e.preventDefault());
-    document.addEventListener('gesturechange', e => e.preventDefault());
-    document.addEventListener('gestureend', e => e.preventDefault());
+<script>
+  document.addEventListener('gesturestart', e => e.preventDefault());
+  document.addEventListener('gesturechange', e => e.preventDefault());
+  document.addEventListener('gestureend', e => e.preventDefault());
 
-    const BASE_URL = "https://raw.githubusercontent.com/juliajdadobe-cpu/jx-7a92-data/main/";
-    const TOPICS = [
-      { title: "Java Core", file: "Java_Core.json" },
-      { title: "ООП", file: "OOP.json" },
-      { title: "Исключения", file: "Exceptions.json" },
-      { title: "Коллекции", file: "Collections.json" },
-      { title: "Дженерики", file: "Generics.json" },
-      { title: "Stream API", file: "java-stream-api.json" },
-      { title: "Многопоточность", file: "multithreading.json" },
-      { title: "JVM / GC / Memory", file: "jvm_gc_memory.json" },
-      { title: "Java IO / NIO", file: "java_io_nio.json" },
-      { title: "HTTP", file: "http.json" },
-      { title: "SQL / Базы данных", file: "sql_databases.json" },
-      { title: "JDBC / JPA / Hibernate", file: "jdbc_jpa_hibernate.json" },
-      { title: "Spring / Spring Boot", file: "spring_spring_boot.json" },
-      { title: "Spring MVC / Web / Security", file: "spring_mvc_web_security.json" },
-      { title: "Kafka / Messaging", file: "kafka_messaging.json" },
-      { title: "Архитектура / Микросервисы", file: "architecture_microservices.json" },
-      { title: "DevOps / Docker / Kubernetes", file: "devops_docker_kubernetes.json" },
-      { title: "Производительность", file: "performance_observability.json" },
-      { title: "Тестирование", file: "testing_spring_junit.json" }
-    ];
+  const BASE_URL = "https://raw.githubusercontent.com/juliajdadobe-cpu/jx-7a92-data/main/";
+  const TOPICS = [
+    { title: "Java Core", file: "Java_Core.json" },
+    { title: "ООП", file: "OOP.json" },
+    { title: "Исключения", file: "Exceptions.json" },
+    { title: "Коллекции", file: "Collections.json" },
+    { title: "Дженерики", file: "Generics.json" },
+    { title: "Stream API", file: "java-stream-api.json" },
+    { title: "Многопоточность", file: "multithreading.json" },
+    { title: "JVM / GC / Memory", file: "jvm_gc_memory.json" },
+    { title: "Java IO / NIO", file: "java_io_nio.json" }
+  ];
 
-    let data = {};
-    let flat = [];
+  let flat = [];
+  const content = document.getElementById('content');
 
-    async function load() {
-      for (const t of TOPICS) {
-        const r = await fetch(BASE_URL + t.file);
-        const j = await r.json();
-        const q = Object.values(j)[0];
-        data[t.title] = q;
-        q.forEach(x => flat.push({ ...x, topic: t.title }));
-      }
-      render();
-      document.getElementById('stats').textContent = `Всего вопросов: ${flat.length}`;
-    }
+  function getSelectedTopics() {
+    return JSON.parse(localStorage.getItem('randomTopics') || '[]');
+  }
 
-    const content = document.getElementById('content');
+  function saveSelectedTopics(arr) {
+    localStorage.setItem('randomTopics', JSON.stringify(arr));
+  }
 
-    function render(filter = '') {
+  function getRandomPool() {
+    const selected = getSelectedTopics();
+    if (!selected.length) return flat;
+    return flat.filter(q => selected.includes(q.topic));
+  }
+
+  function renderTopicCheckboxes() {
+    const selected = getSelectedTopics();
+    return `
+      <div class="topics-filter">
+        ${TOPICS.map(t => `
+          <label>
+            <input type="checkbox" data-topic="${t.title}"
+              ${selected.includes(t.title) ? 'checked' : ''}>
+            ${t.title}
+          </label>
+        `).join('')}
+      </div>
+    `;
+  }
+
+  function showRandom() {
+    document.getElementById('searchBlock').style.display = 'none';
+
+    const pool = getRandomPool();
+    const q = pool[Math.floor(Math.random() * pool.length)];
+
+    content.innerHTML = `
+      <div class="random-card">
+        <div class="random-topic">${q.topic}</div>
+        <div class="random-question">${q.question}</div>
+
+        <button class="big-btn" id="showAnswer">Показать ответ</button>
+        <div class="random-answer" id="answer">${q.answer}</div>
+
+        <button class="big-btn" id="next">Ещё вопрос</button>
+        <button class="big-btn" id="back">Назад</button>
+
+        ${renderTopicCheckboxes()}
+      </div>
+    `;
+
+    document.getElementById('showAnswer').onclick =
+      () => document.getElementById('answer').style.display = 'block';
+
+    document.getElementById('next').onclick = showRandom;
+
+    document.getElementById('back').onclick = () => {
+      document.getElementById('searchBlock').style.display = '';
       content.innerHTML = '';
-      Object.entries(data).forEach(([title, qs]) => {
-        const f = qs.filter(q => (q.question + q.answer).toLowerCase().includes(filter));
-        if (!f.length) return;
-
-        const c = document.createElement('div');
-        c.className = 'chapter';
-
-        const h = document.createElement('div');
-        h.className = 'chapter-header';
-        h.innerHTML = `<span>${title}</span><span>▸</span>`;
-
-        const l = document.createElement('div');
-        l.className = 'questions';
-
-        f.forEach((q, i) => {
-          const d = document.createElement('div');
-          d.className = 'question';
-          d.innerHTML = `<div class="question-title">${i + 1}. ${q.question}</div><div class="answer">${q.answer}</div>`;
-          d.querySelector('.question-title').onclick = () => {
-            const a = d.querySelector('.answer');
-            a.style.display = a.style.display === 'block' ? 'none' : 'block';
-          };
-          l.appendChild(d);
-        });
-
-        h.onclick = () => {
-          const o = l.style.display === 'block';
-          l.style.display = o ? 'none' : 'block';
-          h.lastChild.textContent = o ? '▸' : '▾';
-        };
-
-        c.append(h, l);
-        content.appendChild(c);
-      });
-    }
-
-    document.getElementById('searchInput').oninput = e => {
-      document.getElementById('clearSearch').style.display = e.target.value ? 'block' : 'none';
-      render(e.target.value.toLowerCase());
     };
 
-    document.getElementById('clearSearch').onclick = () => {
-      searchInput.value = '';
-      render('');
-      clearSearch.style.display = 'none';
-    };
-
-    document.getElementById('scrollTop').onclick = () => window.scrollTo({ top: 0, behavior: 'smooth' });
-    document.getElementById('collapseAll').onclick = () => {
-      document.querySelectorAll('.questions').forEach(q => q.style.display = 'none');
-      document.querySelectorAll('.answer').forEach(a => a.style.display = 'none');
-    };
-
-    document.getElementById('randomMode').onclick = () => showRandom();
-
-    function showRandom() {
-      document.getElementById('searchBlock').style.display = 'none';
-      document.getElementById('floating').style.display = 'none';
-
-      const q = flat[Math.floor(Math.random() * flat.length)];
-      content.innerHTML = `
-        <div class="random-card">
-          <div class="random-topic">${q.topic}</div>
-          <div class="random-question">${q.question}</div>
-          <button class="big-btn" id="showAnswer">Показать ответ</button>
-          <div class="random-answer" id="answer">${q.answer}</div>
-          <button class="big-btn" id="next">Ещё вопрос</button>
-          <button class="big-btn" id="back">Назад</button>
-        </div>
-      `;
-
-      document.getElementById('showAnswer').onclick = () =>
-        document.getElementById('answer').style.display = 'block';
-
-      document.getElementById('next').onclick = showRandom;
-      document.getElementById('back').onclick = () => {
-        document.getElementById('searchBlock').style.display = '';
-        document.getElementById('floating').style.display = '';
-        render();
+    document.querySelectorAll('.topics-filter input').forEach(cb => {
+      cb.onchange = () => {
+        const current = getSelectedTopics();
+        const topic = cb.dataset.topic;
+        const updated = cb.checked
+          ? [...new Set([...current, topic])]
+          : current.filter(t => t !== topic);
+        saveSelectedTopics(updated);
       };
-    }
+    });
+  }
 
-    load();
-  </script>
+  async function load() {
+    for (const t of TOPICS) {
+      const r = await fetch(BASE_URL + t.file);
+      const j = await r.json();
+      Object.values(j)[0].forEach(q => flat.push({ ...q, topic: t.title }));
+    }
+    showRandom();
+  }
+
+  load();
+</script>
 </body>
 </html>
