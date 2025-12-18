@@ -43,8 +43,8 @@
 
     h1 { font-size: 1.8rem; }
 
+    /* ===== SEARCH ===== */
     .search-wrapper { margin-bottom: 16px; }
-
     .search {
       width: 100%;
       padding: 12px;
@@ -53,11 +53,13 @@
       font-size: 1rem;
     }
 
+    /* ===== CHAPTERS ===== */
     .chapter {
-      background: #fff;
+      background: #ffffff;
       border-radius: 12px;
       margin-bottom: 12px;
       box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+      overflow: hidden;
     }
 
     .chapter-header {
@@ -71,7 +73,12 @@
 
     .questions { display: none; }
 
-    .question { padding: 12px 16px; border-top: 1px solid #e5e7eb; }
+    .question {
+      padding: 12px 16px;
+      border-top: 1px solid #e5e7eb;
+    }
+
+    .question-title { cursor: pointer; font-weight: 500; }
 
     .answer,
     .random-answer {
@@ -82,9 +89,8 @@
     }
 
     /* ===== RANDOM MODE ===== */
-
     .random-card {
-      background: #fff;
+      background: #ffffff;
       border-radius: 16px;
       padding: 20px;
       box-shadow: 0 10px 30px rgba(0,0,0,0.1);
@@ -130,6 +136,23 @@
       width: 18px;
       height: 18px;
     }
+
+    /* ===== FLOATING ===== */
+    .floating-actions {
+      position: fixed;
+      right: 16px;
+      bottom: 16px;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      z-index: 1000;
+    }
+
+    .floating-actions button {
+      width: 48px;
+      height: 48px;
+      border-radius: 50%;
+    }
   </style>
 </head>
 
@@ -142,6 +165,12 @@
   </div>
 
   <div id="content"></div>
+</div>
+
+<div id="floating" class="floating-actions">
+  <button id="scrollTop">⬆️</button>
+  <button id="collapseAll">🧹</button>
+  <button id="randomBtn">🎲</button>
 </div>
 
 <script>
@@ -162,7 +191,10 @@
     { title: "Java IO / NIO", file: "java_io_nio.json" }
   ];
 
+  let data = {};
   let flat = [];
+  let isRandomMode = false;
+
   const content = document.getElementById('content');
 
   function getSelectedTopics() {
@@ -194,9 +226,67 @@
     `;
   }
 
-  function showRandom() {
-    document.getElementById('searchBlock').style.display = 'none';
+  function render(filter = '') {
+    if (isRandomMode) return;
 
+    content.innerHTML = '';
+
+    Object.entries(data).forEach(([title, qs]) => {
+      const f = qs.filter(q =>
+        (q.question + q.answer).toLowerCase().includes(filter)
+      );
+      if (!f.length) return;
+
+      const c = document.createElement('div');
+      c.className = 'chapter';
+
+      const h = document.createElement('div');
+      h.className = 'chapter-header';
+      h.innerHTML = `<span>${title}</span><span>▸</span>`;
+
+      const l = document.createElement('div');
+      l.className = 'questions';
+
+      f.forEach((q, i) => {
+        const d = document.createElement('div');
+        d.className = 'question';
+        d.innerHTML = `
+          <div class="question-title">${i + 1}. ${q.question}</div>
+          <div class="answer">${q.answer}</div>
+        `;
+        d.querySelector('.question-title').onclick = () => {
+          const a = d.querySelector('.answer');
+          a.style.display = a.style.display === 'block' ? 'none' : 'block';
+        };
+        l.appendChild(d);
+      });
+
+      h.onclick = () => {
+        const o = l.style.display === 'block';
+        l.style.display = o ? 'none' : 'block';
+        h.lastChild.textContent = o ? '▸' : '▾';
+      };
+
+      c.append(h, l);
+      content.appendChild(c);
+    });
+  }
+
+  function enterRandomMode() {
+    isRandomMode = true;
+    document.getElementById('searchBlock').style.display = 'none';
+    document.getElementById('floating').style.display = 'none';
+    showRandom();
+  }
+
+  function exitRandomMode() {
+    isRandomMode = false;
+    document.getElementById('searchBlock').style.display = '';
+    document.getElementById('floating').style.display = '';
+    render();
+  }
+
+  function showRandom() {
     const pool = getRandomPool();
     const q = pool[Math.floor(Math.random() * pool.length)];
 
@@ -219,20 +309,15 @@
       () => document.getElementById('answer').style.display = 'block';
 
     document.getElementById('next').onclick = showRandom;
-
-    document.getElementById('back').onclick = () => {
-      document.getElementById('searchBlock').style.display = '';
-      content.innerHTML = '';
-    };
+    document.getElementById('back').onclick = exitRandomMode;
 
     document.querySelectorAll('.topics-filter input').forEach(cb => {
       cb.onchange = () => {
-        const current = getSelectedTopics();
-        const topic = cb.dataset.topic;
-        const updated = cb.checked
-          ? [...new Set([...current, topic])]
-          : current.filter(t => t !== topic);
-        saveSelectedTopics(updated);
+        const cur = getSelectedTopics();
+        const t = cb.dataset.topic;
+        saveSelectedTopics(
+          cb.checked ? [...new Set([...cur, t])] : cur.filter(x => x !== t)
+        );
       };
     });
   }
@@ -241,10 +326,25 @@
     for (const t of TOPICS) {
       const r = await fetch(BASE_URL + t.file);
       const j = await r.json();
-      Object.values(j)[0].forEach(q => flat.push({ ...q, topic: t.title }));
+      const qs = Object.values(j)[0];
+      data[t.title] = qs;
+      qs.forEach(q => flat.push({ ...q, topic: t.title }));
     }
-    showRandom();
+    render();
   }
+
+  document.getElementById('searchInput').oninput =
+    e => render(e.target.value.toLowerCase());
+
+  document.getElementById('randomBtn').onclick = enterRandomMode;
+
+  document.getElementById('scrollTop').onclick =
+    () => window.scrollTo({ top: 0, behavior: 'smooth' });
+
+  document.getElementById('collapseAll').onclick = () => {
+    document.querySelectorAll('.questions').forEach(q => q.style.display = 'none');
+    document.querySelectorAll('.answer').forEach(a => a.style.display = 'none');
+  };
 
   load();
 </script>
